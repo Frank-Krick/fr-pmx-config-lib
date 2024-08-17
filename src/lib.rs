@@ -1,4 +1,3 @@
-use home::home_dir;
 use serde::{Deserialize, Serialize};
 use std::fs::{self, File};
 use std::io::Read;
@@ -37,6 +36,10 @@ pub fn read_mixer_configuration_file() -> MixerConfig {
 pub struct ServiceUrls {
     pub pipewire_registry_url: String,
     pub pmx_registry_url: String,
+    pub mod_host_addr: String,
+    pub mod_host_port: u16,
+    pub mod_host_feedback_port: u16,
+    pub pmx_mod_host_proxy_url: String,
 }
 
 pub fn read_service_urls() -> ServiceUrls {
@@ -49,6 +52,10 @@ pub fn read_service_urls() -> ServiceUrls {
             let default = ServiceUrls {
                 pipewire_registry_url: String::from("http://127.0.0.1:50000"),
                 pmx_registry_url: String::from("http://127.0.0.1:50001"),
+                mod_host_addr: String::from("127.0.0.1"),
+                mod_host_port: 5555,
+                mod_host_feedback_port: 6666,
+                pmx_mod_host_proxy_url: String::from("http://127.0.0.1:50031"),
             };
             fs::write(path, toml::to_string_pretty(&default).unwrap()).unwrap();
             default
