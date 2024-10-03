@@ -1,6 +1,15 @@
 use serde::{Deserialize, Serialize};
-use std::fs::{self, File};
+use std::fs::File;
 use std::io::Read;
+
+mod builder_config;
+mod data_file_paths;
+mod factory_config;
+mod service_urls;
+
+pub use crate::data_file_paths::{read_data_file_paths, DataFiles};
+pub use crate::factory_config::{read_factory_config, ChannelStripConfig, FactoryConfig};
+pub use crate::service_urls::{read_service_urls, ServiceUrls};
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct Output {
@@ -30,79 +39,4 @@ pub fn read_mixer_configuration_file() -> MixerConfig {
     }
 
     toml::from_str(raw_string.as_str()).unwrap()
-}
-
-#[derive(Serialize, Deserialize, Debug, Clone)]
-pub struct ServiceUrls {
-    pub pipewire_registry_url: String,
-    pub pmx_registry_url: String,
-    pub mod_host_addr: String,
-    pub mod_host_port: u16,
-    pub mod_host_feedback_port: u16,
-    pub pmx_mod_host_proxy_url: String,
-}
-
-pub fn read_service_urls() -> ServiceUrls {
-    let home_dir = home::home_dir().unwrap();
-    let path = home_dir.join(".config/pmx-1/service_urls.toml");
-    let display = path.display();
-
-    match File::open(&path) {
-        Err(_why) => {
-            let default = ServiceUrls {
-                pipewire_registry_url: String::from("http://127.0.0.1:50000"),
-                pmx_registry_url: String::from("http://127.0.0.1:50001"),
-                mod_host_addr: String::from("127.0.0.1"),
-                mod_host_port: 5555,
-                mod_host_feedback_port: 6666,
-                pmx_mod_host_proxy_url: String::from("http://127.0.0.1:50031"),
-            };
-            fs::write(path, toml::to_string_pretty(&default).unwrap()).unwrap();
-            default
-        }
-        Ok(mut file) => {
-            let mut raw_string = String::new();
-
-            if let Err(why) = file.read_to_string(&mut raw_string) {
-                panic!("couldn't read {}: {}", display, why);
-            }
-
-            toml::from_str(raw_string.as_str()).unwrap()
-        }
-    }
-}
-
-#[derive(Serialize, Deserialize, Debug, Clone)]
-pub struct DataFiles {
-    pub pmx_registry_data_file: String,
-}
-
-pub fn read_data_file_paths() -> DataFiles {
-    let home_dir = home::home_dir().unwrap();
-    let path = home_dir.join(".config/pmx-1/data_files.toml");
-    let display = path.display();
-
-    match File::open(&path) {
-        Err(_why) => {
-            let default = DataFiles {
-                pmx_registry_data_file: String::from(
-                    home_dir
-                        .join(".config/pmx-1/pmx_registry.json")
-                        .to_str()
-                        .unwrap(),
-                ),
-            };
-            fs::write(path, toml::to_string_pretty(&default).unwrap()).unwrap();
-            default
-        }
-        Ok(mut file) => {
-            let mut raw_string = String::new();
-
-            if let Err(why) = file.read_to_string(&mut raw_string) {
-                panic!("couldn't read {}: {}", display, why);
-            }
-
-            toml::from_str(raw_string.as_str()).unwrap()
-        }
-    }
 }
